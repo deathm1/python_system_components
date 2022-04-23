@@ -38,14 +38,12 @@ class logging_manager():
             single_line_exception = str(exception).replace("\n", " ")
             single_line_exception = single_line_exception.replace("'","")
             single_line_exception = single_line_exception.replace('"','')
-            
         if(stack_trace==None):
             pass
         else:
             single_line_stack_trace = str(stack_trace.format_exc()).replace("\n", " ")
             single_line_stack_trace = single_line_stack_trace.replace("'","")
             single_line_stack_trace = single_line_stack_trace.replace('"','')
-
         if(exception == None and stack_trace == None):
             message = f"{single_line_message}"
         elif(exception==None and stack_trace!=None):
@@ -71,7 +69,7 @@ class logging_manager():
         else:
             self.my_console_manager.make_console_log(f"[logging_interface][__init__] Something went wrong while pushing logs to log file.", logging.ERROR)
         if(int(config.get("LOGGER_CONFIGURATION","DATABASE_LOGGING")) == 1):
-            was_connection_established, connection_object_or_error = self.my_database_manager.get_sql_controller()
+            was_connection_established, connection_object_or_error = self.my_database_manager.get_database_controller()
             status_database = self.log_database(message, level, config, was_connection_established, connection_object_or_error)
             if(status_database):
                 pass
@@ -101,7 +99,6 @@ class logging_manager():
                     f"[logging_interface][log_file] Log location does not exist. Using root location. {str(current_log_directory)}", 
                     logging.WARN
                 )
-
             if(os.path.exists(current_log_directory)):
                 pass
             else:
@@ -110,9 +107,6 @@ class logging_manager():
                     f"[logging_interface][log_file] Created root log directory. {str(current_log_directory)}", 
                     logging.INFO
                 )
-
-
-            
             current_dt = datetime.now()
             dt_string = current_dt.strftime("%d-%m-%Y")
             current_day_folder = os.path.join(current_log_directory, str(dt_string))
@@ -124,10 +118,6 @@ class logging_manager():
                     f"[logging_interface][log_file] Created day wise log directory. {str(current_day_folder)}", 
                     logging.INFO
                 )
-
-
-
-            
             get_log_name = str(config.get("LOGGER_CONFIGURATION","LOG_FILENAME")).replace(" ","_")
             my_log_filename = get_log_name+"_"+str(dt_string)+".log"
             full_filename = os.path.join(current_day_folder,my_log_filename)

@@ -1,5 +1,6 @@
 # class imports
 from database_manager.sql_interface.sql_interface import sql_interface
+from database_manager.no_sql_interface.no_sql_interface import no_sql_interface
 from console_manager.console_manager import console_manager
 # module imports
 import pyodbc
@@ -20,40 +21,31 @@ class database_manager:
         """
         config = configparser.ConfigParser()
         config.read("./config.ini")
-
         self.my_console_manager = console_manager()
-        was_connection_established, connection_object_or_error = self.create_connection_to_sql_database(config)
-
-        self.my_connection_object_or_error = connection_object_or_error
-        self.my_was_connection_established = was_connection_established
-
         if(config.get("DATABASE_CONFIGURATION", "DB_TYPE")=="SQL"):
+            was_connection_established, connection_object_or_error = self.create_connection_with_sql_database(config)
+            self.my_connection_object_or_error = connection_object_or_error
+            self.my_was_connection_established = was_connection_established
             if(was_connection_established):
-                # self.my_console_manager.make_console_log(
-                # f"[database_manager][__init__] Connection was established to the SQL database successfully.",
-                # logging.INFO
-                # )
                 pass
             else:
                 self.my_console_manager.make_console_log(
                 f"[database_manager][__init__] Something went wrong establishing connection with SQL database. ERROR : {str(connection_object_or_error)}",
                 logging.ERROR
             )
-
-
         elif(config.get("DATABASE_CONFIGURATION", "DB_TYPE")=="NOSQL"):
+            was_connection_established, connection_object_or_error = self.create_connection_with_no_sql_database(config)
+            self.my_connection_object_or_error = connection_object_or_error
+            self.my_was_connection_established = was_connection_established
             if(was_connection_established):
-                self.my_console_manager.make_console_log(
-                f"[database_manager][__init__] Connection was established to the NOSQL datbase successfully.",
-                logging.INFO
-                )
+                pass
             else:
                 self.my_console_manager.make_console_log(
                 f"[database_manager][__init__] Something went wrong establishing connection with NOSQL database. ERROR : {str(connection_object_or_error)}",
                 logging.ERROR
-            )
+                )
     @classmethod
-    def get_sql_controller(self):
+    def get_database_controller(self):
         """This function returns my_was_connection_established, my_connection_object_or_error
 
         Returns:
@@ -61,14 +53,11 @@ class database_manager:
         """
         return (self.my_was_connection_established, self.my_connection_object_or_error)
     @classmethod
-    def create_connection_to_sql_database(self, config) -> bool:
+    def create_connection_with_sql_database(self, config):
         """This function is responsible for initializing connection to SQL database.
 
         Args:
-            config (_type_): _description_
-
-        Returns:
-            bool: _description_
+            config (configparser): configparser object
         """
         if(config.get("DATABASE_CONFIGURATION", "AUTHENTICATION")=="OS"):
             try:
@@ -97,8 +86,21 @@ class database_manager:
             except Exception as e:
                 return (False, e)
     @classmethod
-    def create_connection_to_no_sql_database(self, config) -> bool:
-        pass
+    def create_connection_with_no_sql_database(self, config):
+        """This function is reposnible for connecting ot NO SQL database.
+
+        Args:
+            config (configparser): This is configparser object.
+
+        Returns:
+            was_connection_established, connection_object_or_error: was_connection_established, connection_object_or_error
+        """
+        try:
+            my_no_sql_object = no_sql_interface()
+            was_connection_established, connection_object_or_error = my_no_sql_object.get_database(config)
+            return (was_connection_established, connection_object_or_error)
+        except Exception as e:
+            return (False, e)
     @classmethod
     def __del__(self):
         """Destructor
