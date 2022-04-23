@@ -22,10 +22,10 @@
 
 import traceback
 
-from logging_interface.logging_interface import logging_interface
+from logging_manager.logging_manager import logging_manager
 import logging
 i = 1
 
-while i<=10000:
-    my_log_obj = logging_interface(f"Simple Log{str(i)}", logging.INFO, None, None)
+while i<=10:
+    my_log_obj = logging_manager(f"Simple Log{str(i)}", logging.INFO, None, None)
     i = i + 1

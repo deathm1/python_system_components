@@ -12,7 +12,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 
-class logging_interface():
+class logging_manager():
     """This class acts as an interface to manage logs.
     """
     my_console_manager = None
@@ -30,8 +30,8 @@ class logging_interface():
         single_line_message = str(message).replace("\n", " ")
         single_line_message = single_line_message.replace("'","")
         single_line_message = single_line_message.replace('"','')
-        single_line_exception = "No Exception"
-        single_line_stack_trace = "No Traceback"
+        single_line_exception = "None"
+        single_line_stack_trace = "None"
         if(exception==None):
             pass
         else:
@@ -45,7 +45,16 @@ class logging_interface():
             single_line_stack_trace = str(stack_trace.format_exc()).replace("\n", " ")
             single_line_stack_trace = single_line_stack_trace.replace("'","")
             single_line_stack_trace = single_line_stack_trace.replace('"','')
-        message = f"{single_line_message} [Exception] : {single_line_exception} [Traceback] : {single_line_stack_trace}"
+
+        if(exception == None and stack_trace == None):
+            message = f"{single_line_message}"
+        elif(exception==None and stack_trace!=None):
+            message = f"{single_line_message} [Traceback] : {single_line_stack_trace}"
+        elif(stack_trace==None and exception!=None):
+            message = f"{single_line_message} [Exception] : {single_line_exception}"
+        else:
+            message = f"{single_line_message} [Exception] : {single_line_exception} [Traceback] : {single_line_stack_trace}"
+    
         self.my_console_manager = console_manager()
         self.my_database_manager = database_manager()
         try:
@@ -87,20 +96,23 @@ class logging_interface():
             if(os.path.exists(log_location)):
                 current_log_directory = os.path.join(log_location, log_directory_name)
             else:
+                current_log_directory = os.path.join(os.getcwd(), log_directory_name)
                 self.my_console_manager.make_console_log(
-                    "[logging_interface][log_file] Log location does not exist, using root directory.", 
+                    f"[logging_interface][log_file] Log location does not exist. Using root location. {str(current_log_directory)}", 
                     logging.WARN
                 )
-                current_log_directory = os.path.join(os.getcwd(), log_directory_name)
 
             if(os.path.exists(current_log_directory)):
                 pass
             else:
+                os.mkdir(current_log_directory)
                 self.my_console_manager.make_console_log(
-                    "[logging_interface][log_file] Log directory does not exist, creating one.", 
+                    f"[logging_interface][log_file] Created root log directory. {str(current_log_directory)}", 
                     logging.INFO
                 )
-                os.mkdir(current_log_directory)
+
+
+            
             current_dt = datetime.now()
             dt_string = current_dt.strftime("%d-%m-%Y")
             current_day_folder = os.path.join(current_log_directory, str(dt_string))
@@ -108,6 +120,14 @@ class logging_interface():
                 pass
             else:
                 os.mkdir(current_day_folder)
+                self.my_console_manager.make_console_log(
+                    f"[logging_interface][log_file] Created day wise log directory. {str(current_day_folder)}", 
+                    logging.INFO
+                )
+
+
+
+            
             get_log_name = str(config.get("LOGGER_CONFIGURATION","LOG_FILENAME")).replace(" ","_")
             my_log_filename = get_log_name+"_"+str(dt_string)+".log"
             full_filename = os.path.join(current_day_folder,my_log_filename)
